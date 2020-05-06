@@ -12,8 +12,8 @@
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       .content{display: flex;justify-content: flex-start;align-content: flex-start;}
-      .list{width: 300px;height: 100%;border-right: 1px solid #eee;position: relative;}
-      .form{width: 100%;height: 100%;overflow-y:scroll;padding-bottom: 40px;box-sizing: border-box;}
+      .list{width: 300px;height: 100%;border-right: 1px solid #eee;position: relative;flex: 5;}
+      .form{width: 300px;height: 100%;overflow-y:scroll;padding-bottom: 40px;box-sizing: border-box;flex: 9;}
       /* .form::-webkit-scrollbar {display:none} */
       .ipt{width: 20%;margin: 1px 0;}
       label{width: 100%;display: block;}
@@ -114,6 +114,15 @@
     <script src="js/jquery.js"></script>
     <script src="js/echarts.common.js"></script>
     <script>
+    	window.onresize = function () {
+        for(let i=1;i<9;i++){
+      		var chart='myChart'+i;
+      		window[chart].resize();
+      		let height=$(window).height(),width=document.body.clientWidth;;
+      	$('.content').css('height',height);
+      	$('.content').css('width',width)
+      	}
+    	}
     	//全局参数和数据初始化
     	chartStart()
       var arr=[],msg1=[],msg2=[],msg3=[],msg4=[],msg5=[],msg6=[],msg7=[],msg8=[],date1=[],date2=[],date3=[],date4=[],date5=[],date6=[],date7=[],date8=[],n=0;
@@ -152,8 +161,6 @@
             'Type':'req'
           }
         s2.emit('req', JSON.stringify(data));
-        
-// 　　　　s2.emit('req', "{\"Time\":[],\"Type\":\"req\"}");
 　　	})
       //得到左边时间列表并加载到页面
       s2.on('list', function(msg){
@@ -175,17 +182,6 @@
       s2.on('tf', function(msg){
         console.log(msg)
       });
-      
-//    $('form').submit(function(){
-//      s2.emit('msg', $('#m').val(), function(data){
-//        $('#messages').append($('<li>').text('ACK CALLBACK: ' + data));
-//      });
-//      socket.emit('notice', $('#m').val());
-//      $('#m').val('');
-//      return false;
-//    })
-
-
 			
 			//重新连接
 			function connect(){
