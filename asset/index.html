@@ -114,6 +114,7 @@
     <script src="js/jquery.js"></script>
     <script src="js/echarts.common.js"></script>
     <script>
+    	//页面宽高改变时chart和页面自适应
     	window.onresize = function () {
         for(let i=1;i<9;i++){
       		var chart='myChart'+i;
@@ -211,6 +212,7 @@
       //提交发送
  			function submit(){
         console.log(checklist)
+        checklist.sort(function(a,b){return(a-b)})
  				if(checklist.length){
           let data={
             'Time':checklist,
@@ -223,9 +225,10 @@
  				}
  				
  			}
- 			//提交发送
+ 			//回放redisplay
  			function redisplay(){
         console.log(checklist)
+        checklist.sort(function(a,b){return(a-b)})
  				if(checklist.length){
           let data={
             'Time':checklist,
@@ -235,8 +238,7 @@
           deleteChart()
  				}else{
  					alert('没有勾选内容')
- 				}
- 				
+ 				}	
  			}
  			//清除左边列表勾选
  			function deleted(){
