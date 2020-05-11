@@ -21,8 +21,8 @@
       .submit{background: #A9334C;color: #ffffff;height:25px; text-align: center;padding: 0 14px;border-radius: 6px;line-height: 25px;cursor: pointer;}
       .delete{background: #A9334C;color: #ffffff;height:25px; text-align: center;padding: 0 14px;border-radius: 6px;line-height: 25px;cursor: pointer;}
       .right{width: 100%;height: 100%;position: relative;}
-      .rightson{width: 100%;height: 100%;overflow-y: scroll;padding-bottom: 40px;box-sizing: border-box;}
-      .chartpre{position: relative;}
+      .rightson{width: 100%;height: 100%;overflow-y: scroll;padding-bottom: 40px;box-sizing: border-box;display: flex;justify-content: center;align-items: center;}
+      .chartpre{position: relative;width: 100%;}
       .deleteChart{position: absolute;top: 10px;left: 50%;transform: translateX(-50%);color: #A9334C;
       	padding:2px 4px;border: 1px solid #A9334C;border-radius: 6px;cursor: pointer;}
       .deleteCharts{color: #ffffff;padding: 0 10px;border: 1px solid #A9334C;border-radius: 6px;cursor: pointer;display: inline-block;
@@ -54,11 +54,11 @@
   		<div class="right">
   			<div class="rightson">
   				<div class="chartpre">
-			  		<div id="id1" style="height:300px;"></div> 
-			  		<div class="deleteChart" onclick="deleteChart(1)">清空1通道</div>
-			  		<div class="pauseChart pauseChart1" onclick="pauseChart(1)">暂停1通道</div>
+			  		<div id="id1" style="height:800px;"></div> 
+			  		<!--<div class="deleteChart" onclick="deleteChart(1)">清空1通道</div>
+			  		<div class="pauseChart pauseChart1" onclick="pauseChart(1)">暂停1通道</div>-->
 			  	</div>
-			    <div class="chartpre">
+			    <!--<div class="chartpre">
 			  		<div id="id2" style="height:300px;"></div>  
 			  		<div class="deleteChart" onclick="deleteChart(2)">清空2通道</div>
 			  		<div class="pauseChart pauseChart2" onclick="pauseChart(2)">暂停2通道</div>
@@ -93,6 +93,7 @@
 			  		<div class="deleteChart" onclick="deleteChart(8)">清空8通道</div>
 			  		<div class="pauseChart pauseChart8" onclick="pauseChart(8)">暂停8通道</div>
 			  	</div>
+  			-->
   			</div>
 	  		
 		  	<div class="bot">
@@ -116,20 +117,26 @@
     <script>
     	//页面宽高改变时chart和页面自适应
     	window.onresize = function () {
-        for(let i=1;i<9;i++){
-      		var chart='myChart'+i;
-      		window[chart].resize();
-      		let height=$(window).height(),width=document.body.clientWidth;;
+    		myChart1.resize()
+    		let height=$(window).height(),width=document.body.clientWidth;;
       	$('.content').css('height',height);
       	$('.content').css('width',width)
-      	}
+//      for(let i=1;i<9;i++){
+//    		var chart='myChart'+i;
+//    		window[chart].resize();
+//    		let height=$(window).height(),width=document.body.clientWidth;;
+//    	$('.content').css('height',height);
+//    	$('.content').css('width',width)
+//    	}
     	}
     	//全局参数和数据初始化
     	chartStart()
       var arr=[],msg1=[],msg2=[],msg3=[],msg4=[],msg5=[],msg6=[],msg7=[],msg8=[],date1=[],date2=[],date3=[],date4=[],date5=[],date6=[],date7=[],date8=[],n=0;
 			var ispause=[true,true,true,true,true,true,true,true,true];//是否暂停通道的开关
 			var checklist=[];//勾选的左边列表时间arr
-			
+			//x轴最大最小值，x轴，一次接收到的数据数组
+			var xmaxmin=[],date=[],dataarr=[],series=[];
+//			getXmaxmin(12,13)
 			//模拟左边列表数据
 //			let text=''						
 //			for(let i=0;i<100;i++){
@@ -151,7 +158,7 @@
 //    	}
 //    },100)
 //			模拟数据     
-       
+
        
       var s2 = io("");
       //发送获取左边时间列表信号
@@ -177,8 +184,47 @@
         inputClick()
       });
       //监听传过来的数据展示波形
+//    let xmn=getXmaxmin(msgs.Reccnt-msgs.Front,msgs.Reccnt-msgs.Front+msgs.Data.length-1)
       s2.on('reply', function(msg){
-        setOption(msg)
+//      setOption(msg)
+        dataarr.push(JSON.parse(msg))
+        console.log(checklist)
+        console.log(dataarr)
+        if(dataarr.length==checklist.length){
+        	let legenddata=[]
+        	for(var i=0;i<dataarr.length;i++){
+        		var m=i
+        		xmaxmin.push(dataarr[m].Reccnt-dataarr[m].Front);
+        		xmaxmin.push(dataarr[m].Reccnt-dataarr[m].Front+dataarr[m].Data.length-1)
+        		
+        	}
+        	console.log(xmaxmin)
+        	var date=getXmaxmin(xmaxmin)
+        	let dateXZ= getdateX(date)
+      	
+        	for(let j=0;j<dataarr.length;j++){
+        		let dat={
+        				name:'通道'+dataarr[j].Id,
+		        		type: 'line',
+		            data: getsoloY(date,dataarr[j])
+		        }
+        		series.push(dat)
+        		legenddata.push('通道'+dataarr[j].Id)
+        	}
+        	console.log(series)
+        	myChart1=echarts.init(document.getElementById('id'+1));
+	      	let option={
+	      		legend: {
+							data: legenddata
+						},
+	      		xAxis: {
+	            data: dateXZ
+	          },
+		        series: series
+	      	}
+	      	myChart1.setOption(option)
+	      	
+        }
       });
       s2.on('tf', function(msg){
         console.log(msg)
@@ -220,6 +266,7 @@
           }
           s2.emit('req', JSON.stringify(data));
           deleteChart()
+          xmaxmin=[];date=[];dataarr=[],series=[];
  				}else{
  					alert('没有勾选内容')
  				}
@@ -236,6 +283,7 @@
           }
           s2.emit('req', JSON.stringify(data));
           deleteChart()
+					xmaxmin=[];date=[];dataarr=[],series=[];
  				}else{
  					alert('没有勾选内容')
  				}	
@@ -252,17 +300,17 @@
       
       //左边列表勾选
       function inputClick(){
-        console.log(checklist)
+//      console.log(checklist)
 		    var s = $("input[name='time']");
 		    s.each(function(i) {          
             $(this).click(function(){
-              console.log(checklist)  
+//            console.log(checklist)  
                 if(this.checked==true){
                   checklist.push(this.value)
-                  console.log(checklist)    
+//                console.log(checklist)    
                 }else{
                 	checklist.find((m,i)=>{if(m==this.value){checklist.splice(i,1)}})
-                  console.log(checklist)
+//                console.log(checklist)
                 }
              });
         }); 
@@ -271,7 +319,7 @@
       
 			//echart初始化
       function chartStart(){
-      	for(let i=1;i<9;i++){
+      	for(let i=1;i<2;i++){
       		var chart='myChart'+i;
       		window[chart]=echarts.init(document.getElementById('id'+i));
       		let option={
@@ -343,7 +391,15 @@
       //设置echart数据
       function setOption(msg){
       	let msgs=JSON.parse(msg)
-      	console.log(msgs)
+      	let frontarr=[],backarr=[],hh=[454,99,65456,1231,54];
+      	frontarr.length=500;backarr.length=200
+      	let mf=frontarr.concat([4000,90000,90000,4000,5])
+//    	console.log(msgs)
+//    	let mid=frontarr.concat(msg.Data)
+      	let finarr=mf.concat(backarr)
+      	let jj=finarr.concat(hh)
+//    	let xmn=getXmaxmin([msgs.Reccnt-msgs.Front,msgs.Reccnt-msgs.Front+msgs.Data.length-1])
+//    	let soloxmn=getsoloXmaxmin(msgs.Id,msgs.Reccnt-msgs.Front,msgs.Reccnt-msgs.Front+msgs.Data.length-1)
       	//ispause数组为暂停的开关
       	if(ispause[msgs.Id]){
 	      	let msgname='msg'+msgs.Id;
@@ -363,14 +419,55 @@
 	            data: window[datename]
 	          },
 		        series: [{
+		        		
 		            data: window[msgname]
+		        },
+		        {
+		        		type: 'line',
+		            data: jj
 		        }]
 	      	}
 	      	window[chartname].setOption(option)
       	}     
       }
-      
-      
+      //得到x轴起始值数组,m=r-600 n=m+l-1
+      function getXmaxmin(xmaxmin){
+//    	xmaxmin.push(m)
+//    	xmaxmin.push(n)
+				var max = Math.max.apply(null, xmaxmin);
+				var min = Math.min.apply(null, xmaxmin);
+				xmaxmin=[min,max]
+				console.log(xmaxmin)
+				for(var i=0;i<(max-min+1);i++){
+					date.push(min+i)
+				}
+				console.log(date)
+				return date
+      }
+      //得到起始为0的X轴
+      function getdateX(date){
+      	let datex=[]
+      	for(let i=0;i<date.length;i++){
+      		datex.push(date[i]-date[0])
+      	}
+      	return datex
+      }
+      //得到单独的每一个波形的Y轴数组，m=r-600(min),n=m+l-1(max)
+      function getsoloY(date,msg){
+      	console.log(msg)
+      	let m=msg.Reccnt-msg.Front,n=msg.Reccnt-msg.Front+msg.Data.length-1,datel=date.length,frontarr=[],midarr=[];
+      	frontarr.length=date.indexOf(m);
+      	let mid=frontarr.concat(msg.Data)
+      	console.log(mid)
+      	return mid
+//    	console.log(frontarrl)
+//    	let datename='date'+id
+//    	for(var i=0;i<(n-m+1);i++){
+//					window[datename].push(m+i)
+//				}
+//				console.log(window[datename])
+//				return window[datename]
+      }
       //清除echart数据
       function deleteChart(id){
       	if(id){
@@ -392,7 +489,7 @@
 	      	window[chartname].setOption(option)
       	}else{
       		chartStart()
-      		for(let i=1;i<9;i++){
+      		for(let i=1;i<2;i++){
       			let msgname='msg'+i;
 		      	let datename='date'+i;
 		      	window[msgname]=[];
